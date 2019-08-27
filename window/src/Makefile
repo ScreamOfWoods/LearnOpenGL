@@ -1,6 +1,6 @@
 CC = g++
 
-include_dirs = -I../
+include_dirs = -I../ -I../GLAD/include
 lib_dirs = -L../GLFW/lib
 
 LINKERFLAGS = -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl
