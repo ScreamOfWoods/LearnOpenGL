@@ -1,11 +1,9 @@
 CC = g++
 
 include_dirs = -I../ -I../GLAD/include
-lib_dirs = -L../GLFW/lib
 
-LINKERFLAGS = -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl
-CCFLAGS = $(include_dirs) $(lib_dirs) $(LINKERFLAGS)
+PKGFLAGS = glfw3
+CCFLAGS = $(include_dirs)
 
 all:
-	$(CC) $(CCFLAGS) main.cpp -o main 
-
+	$(CC)  `pkg-config --cflags $(PKGFLAGS)` $(CCFLAGS) main.cpp -o main `pkg-config --static --libs $(PKGFLAGS)` 
