@@ -21,6 +21,13 @@ void processInput(GLFWwindow* window)
 	}
 }
 
+void createBuffer(GLenum bufferType, GLsizei n, GLuint* buffer, GLsizeiptr size, GLvoid* data)
+{
+	glGenBuffers(n, buffer);
+	glBindBuffer(bufferType, (*buffer));
+	glBufferData(bufferType, size, data, GL_STATIC_DRAW);
+}
+
 int main()
 {
 	std::cout<<"Hello GL\n";
@@ -60,18 +67,14 @@ int main()
 	};
 
 	GLuint VBO;
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), (GLvoid*) vertices, GL_STATIC_DRAW);
+	createBuffer(GL_ARRAY_BUFFER, 1, &VBO, sizeof(vertices), (GLvoid*) vertices);
 
 	GLuint VAO;
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
-	unsigned int EBO;
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	GLuint EBO;
+	createBuffer(GL_ELEMENT_ARRAY_BUFFER, 1, &EBO, sizeof(indices), (GLvoid*) indices);
 
 	int success;
 	char log[512];
