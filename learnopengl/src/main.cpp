@@ -7,8 +7,11 @@
 const char* vertexShaderSource = 
 "#version 330 core\nlayout (location = 0) in vec3 aPos;\n\nvoid main()\n{\ngl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n}";
 
-const char* fragmentShaderSource = 
-"#version 330 core\nout vec4 FragColor;\n\nvoid main()\n{\nFragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n}";
+const char* fragmentShaderSourceR = 
+"#version 330 core\nout vec4 FragColor;\n\nvoid main()\n{\nFragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n}";
+
+const char* fragmentShaderSourceB = 
+"#version 330 core\nout vec4 FragColor;\n\nvoid main()\n{\nFragColor = vec4(0.0f, 0.0f, 1.0f, 1.0f);\n}";
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -22,11 +25,28 @@ void processInput(GLFWwindow* window)
 	}
 }
 
-void createBuffer(GLenum bufferType, GLsizei n, GLuint* buffer, GLsizeiptr size, GLvoid* data)
+GLuint createRenderableObject(unsigned int* object, float* vertices, size_t v_size, 
+		unsigned int* indices, size_t i_size)
 {
-	glGenBuffers(n, buffer);
-	glBindBuffer(bufferType, (*buffer));
-	glBufferData(bufferType, size, data, GL_STATIC_DRAW);
+	GLuint vao;
+	GLuint ebo;
+
+	glGenBuffers(1, object);
+	glGenBuffers(1, &ebo);
+
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, (*object));
+	glBufferData(GL_ARRAY_BUFFER, v_size, vertices, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, i_size, indices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*) 0);
+	glEnableVertexAttribArray(0);
+
+	return vao;
 }
 
 GLuint createShader(GLenum shaderType, GLsizei n, const GLchar** source)
@@ -62,6 +82,48 @@ GLuint createShader(GLenum shaderType, GLsizei n, const GLchar** source)
 	return shader;
 }
 
+int createShaderProgram(GLuint vertexShader, GLuint fragmentShader)
+{
+	GLuint program;
+	program = glCreateProgram();
+	if(!program) {
+		std::cout<<"Failed to create shader program\n";
+		exit(EXIT_FAILURE);
+	}
+
+	glAttachShader(program, vertexShader);
+	glAttachShader(program, fragmentShader);
+
+	glLinkProgram(program);
+	
+	int success;
+	char log[512];
+
+	glGetProgramiv(program, GL_LINK_STATUS, &success);
+
+	if(!success) {
+		std::cout<<"Failed to link shader program\n";
+		exit(EXIT_FAILURE);
+	}
+
+	return program;
+}
+
+void renderLogic(GLuint redProgram, GLuint blueProgram,
+		 GLuint vaoRed, GLuint vaoBlue)
+{
+	glUseProgram(redProgram);
+	glBindVertexArray(vaoRed);
+	
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	glUseProgram(blueProgram);
+	glBindVertexArray(vaoBlue);
+
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+}
+
 int main()
 {
 	std::cout<<"Hello GL\n";
@@ -88,58 +150,61 @@ int main()
 		return -1;
 	}
 
-	float vertices[] = {
+	//Red coordinates
+	float verticesR[] = {
 		-0.5f, 0.5f, 0.0f,
-		 0.25f, 0.25f, 0.0f,
-		 0.5f, -0.5f, 0.0f,
-		-0.25f, -0.25f, 0.0f
+		 0.0f, 0.5f, 0.0f,
+		 0.0f, 0.0f, 0.0f,
+		-0.5f, 0.0f, 0.0f
 	};
 
+	//Blue coordinates
+	float verticesB[] = {
+		 0.0f, 0.0f, 0.0f,
+		 0.5f, 0.0f, 0.0f,
+		 0.5f, -0.5f, 0.0f,
+		 0.0f, -0.5f, 0.0f
+	};
+
+	//Indices are the same for both objects
 	unsigned int indices[] = {
 		0, 1, 2,
 		0, 2, 3
 	};
 
-	GLuint VBO;
-	createBuffer(GL_ARRAY_BUFFER, 1, &VBO, sizeof(vertices), (GLvoid*) vertices);
+	//Create Red Object
+	unsigned int redObject;
+	GLuint vaoRed = createRenderableObject(&redObject, verticesR, sizeof(verticesR), indices, sizeof(indices));
+	//Create Blue Object
+	unsigned int blueObject;
+	GLuint vaoBlue = createRenderableObject(&redObject, verticesB, sizeof(verticesB), indices, sizeof(indices));
 
-	GLuint VAO;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	GLuint EBO;
-	createBuffer(GL_ELEMENT_ARRAY_BUFFER, 1, &EBO, sizeof(indices), (GLvoid*) indices);
-
-	int success;
-	char log[512];
-
-	GLuint vertexShader, fragmentShader;
+	//Create Red Shader
+	GLuint vertexShader, fragmentShaderR;
 
 	vertexShader = createShader(GL_VERTEX_SHADER, 1, &vertexShaderSource);
-	fragmentShader = createShader(GL_FRAGMENT_SHADER, 1, &fragmentShaderSource);
+	fragmentShaderR = createShader(GL_FRAGMENT_SHADER, 1, &fragmentShaderSourceR);
 
-	GLuint shaderProgram;
-	shaderProgram = glCreateProgram();
-
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-	
-	if(!success) {
-		glGetProgramInfoLog(shaderProgram, 512, NULL, log);
-		std::cout<<"Error::SHADER::PROGRAM\n"<<log<<std::endl;
-	}
+	GLuint shaderProgramR;
+	shaderProgramR = createShaderProgram(vertexShader, fragmentShaderR);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (GLvoid*) 0);
 	glEnableVertexAttribArray(0);
 
-	glUseProgram(shaderProgram);
-	glBindVertexArray(VAO);
+	//Create Blue Shader
+	GLuint fragmentShaderB;
+
+	fragmentShaderB = createShader(GL_FRAGMENT_SHADER, 1, &fragmentShaderSourceB);
+
+	GLuint shaderProgramB;
+	shaderProgramB = createShaderProgram(vertexShader, fragmentShaderB);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (GLvoid*) 0);
+	glEnableVertexAttribArray(0);
 
 	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
+	glDeleteShader(fragmentShaderR);
+	glDeleteShader(fragmentShaderB);
 
 	glViewport(0, 0, 800, 600);
 
@@ -148,15 +213,20 @@ int main()
 	while(!glfwWindowShouldClose(window)) {
 		processInput(window);
 
-		glClearColor(0.5f, 0.2f, 0.3f, 0.3f);
+		glClearColor(0.0f, 1.0f, 0.0f, 0.3f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		renderLogic(shaderProgramR, shaderProgramB, vaoRed, vaoBlue);
 		
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 	
+	glDeleteVertexArrays(1, &vaoRed);
+	glDeleteVertexArrays(1, &vaoBlue);
+	glDeleteBuffers(1, &redObject);
+	glDeleteBuffers(1, &blueObject);
+
 	glfwTerminate();
 
 	return 0;
