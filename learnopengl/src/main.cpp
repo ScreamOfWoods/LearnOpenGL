@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+#include <stdlib.h>
 
 const char* vertexShaderSource = 
 "#version 330 core\nlayout (location = 0) in vec3 aPos;\n\nvoid main()\n{\ngl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n}";
@@ -26,6 +27,39 @@ void createBuffer(GLenum bufferType, GLsizei n, GLuint* buffer, GLsizeiptr size,
 	glGenBuffers(n, buffer);
 	glBindBuffer(bufferType, (*buffer));
 	glBufferData(bufferType, size, data, GL_STATIC_DRAW);
+}
+
+GLuint createShader(GLenum shaderType, GLsizei n, const GLchar** source)
+{
+	GLuint shader;
+	shader = glCreateShader(shaderType);
+
+	if(!shader) {
+		if(shaderType == GL_VERTEX_SHADER)
+			std::cout<<"Failed to create Vertex shader\n";
+		else
+			std::cout<<"Failed to created Fragment shader\n";
+		exit(EXIT_FAILURE);
+	}
+	glShaderSource(shader, n, source, NULL);
+	glCompileShader(shader);
+	
+	int success;
+	char log[512];
+
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+	if(!success) {
+		glGetShaderInfoLog(shader, 512, NULL, log);
+		if(shaderType == GL_VERTEX_SHADER)
+			std::cout<<"Failed to compile Vertex shader\n";
+		else
+			std::cout<<"Failed to compile Fragment shader\n";
+		
+		std::cout<<log<<std::endl;
+		exit(EXIT_FAILURE);
+	}
+	
+	return shader;
 }
 
 int main()
@@ -79,29 +113,10 @@ int main()
 	int success;
 	char log[512];
 
-	GLuint vertexShader;
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-	glCompileShader(vertexShader);
+	GLuint vertexShader, fragmentShader;
 
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-	
-	if(!success) {
-		glGetShaderInfoLog(vertexShader, 512, NULL, log);
-		std::cout<<"Error::VERTEX::SHADER\n"<<log<<std::endl;
-	}
-
-	GLuint fragmentShader;
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-	glCompileShader(fragmentShader);
-
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-	
-	if(!success) {
-		glGetShaderInfoLog(vertexShader, 512, NULL, log);
-		std::cout<<"Error::FRAGMENT::SHADER\n"<<log<<std::endl;
-	}
+	vertexShader = createShader(GL_VERTEX_SHADER, 1, &vertexShaderSource);
+	fragmentShader = createShader(GL_FRAGMENT_SHADER, 1, &fragmentShaderSource);
 
 	GLuint shaderProgram;
 	shaderProgram = glCreateProgram();
