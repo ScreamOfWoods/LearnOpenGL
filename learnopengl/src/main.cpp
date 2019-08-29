@@ -3,15 +3,19 @@
 
 #include <iostream>
 #include <stdlib.h>
+#include <math.h>
 
-const char* vertexShaderSource = 
+const char* vertexShaderSourceR = 
 "#version 330 core\nlayout (location = 0) in vec3 aPos;\n\nvoid main()\n{\ngl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n}";
 
+const char* vertexShaderSourceB = 
+"#version 330 core\nlayout (location = 0) in vec3 aPos;\nlayout (location = 1) in vec3 color;\nout vec3 vColor;\nvoid main()\n{\ngl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\nvColor = color;\n}";
+
 const char* fragmentShaderSourceR = 
-"#version 330 core\nout vec4 FragColor;\n\nvoid main()\n{\nFragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n}";
+"#version 330 core\nout vec4 FragColor;\nuniform vec4 rgradient;\nvoid main()\n{\nFragColor = rgradient;\n}";
 
 const char* fragmentShaderSourceB = 
-"#version 330 core\nout vec4 FragColor;\n\nvoid main()\n{\nFragColor = vec4(0.0f, 0.0f, 1.0f, 1.0f);\n}";
+"#version 330 core\nout vec4 FragColor;\nin vec3 vColor;\nvoid main()\n{\nFragColor = vec4(vColor, 1.0f);\n}";
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -26,7 +30,7 @@ void processInput(GLFWwindow* window)
 }
 
 GLuint createRenderableObject(unsigned int* object, float* vertices, size_t v_size, 
-		unsigned int* indices, size_t i_size)
+		unsigned int* indices, size_t i_size, int n)
 {
 	GLuint vao;
 	GLuint ebo;
@@ -43,8 +47,13 @@ GLuint createRenderableObject(unsigned int* object, float* vertices, size_t v_si
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, i_size, indices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*) 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, n*sizeof(float), (void*) 0);
 	glEnableVertexAttribArray(0);
+	//Blue Object
+	if(n > 3) {
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, n*sizeof(float), (void*) (3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+	}
 
 	return vao;
 }
@@ -103,6 +112,8 @@ int createShaderProgram(GLuint vertexShader, GLuint fragmentShader)
 
 	if(!success) {
 		std::cout<<"Failed to link shader program\n";
+		glGetProgramInfoLog(program, 512, NULL, log);
+		std::cout<<log<<std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -113,8 +124,18 @@ void renderLogic(GLuint redProgram, GLuint blueProgram,
 		 GLuint vaoRed, GLuint vaoBlue)
 {
 	glUseProgram(redProgram);
-	glBindVertexArray(vaoRed);
 	
+	float timeVal = glfwGetTime();
+	float rpulse = sin(timeVal) / 2.0f + 0.5f;
+	int rcolorLocation = glGetUniformLocation(redProgram, "rgradient");
+	
+	if(rcolorLocation == -1) {
+		std::cout<<"Unable to find UNIFORM variable from SHADER\n";
+		exit(EXIT_FAILURE);
+	}
+
+	glUniform4f(rcolorLocation, rpulse, 0.0f, 0.0f, 1.0f);
+	glBindVertexArray(vaoRed);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 	glUseProgram(blueProgram);
@@ -152,18 +173,19 @@ int main()
 
 	//Red coordinates
 	float verticesR[] = {
-		-0.5f, 0.5f, 0.0f,
-		 0.0f, 0.5f, 0.0f,
-		 0.0f, 0.0f, 0.0f,
-		-0.5f, 0.0f, 0.0f
-	};
-
-	//Blue coordinates
-	float verticesB[] = {
 		 0.0f, 0.0f, 0.0f,
 		 0.5f, 0.0f, 0.0f,
 		 0.5f, -0.5f, 0.0f,
 		 0.0f, -0.5f, 0.0f
+	};
+
+	//Blue coordinates
+	float verticesB[] = {
+		//Coordinates       //Colors
+		-0.5f, 0.5f, 0.0f,  1.0f, 0.3f, 0.2f,
+		 0.0f, 0.5f, 0.0f,  0.3f, 1.0f, 0.2f,
+		 0.0f, 0.0f, 0.0f,  0.2f, 0.3f, 1.0f,
+		-0.5f, 0.0f, 0.0f,  0.2f, 0.7f, 0.1f
 	};
 
 	//Indices are the same for both objects
@@ -174,35 +196,39 @@ int main()
 
 	//Create Red Object
 	unsigned int redObject;
-	GLuint vaoRed = createRenderableObject(&redObject, verticesR, sizeof(verticesR), indices, sizeof(indices));
+	GLuint vaoRed = createRenderableObject(&redObject, verticesR, sizeof(verticesR), indices, sizeof(indices), 3);
 	//Create Blue Object
 	unsigned int blueObject;
-	GLuint vaoBlue = createRenderableObject(&redObject, verticesB, sizeof(verticesB), indices, sizeof(indices));
+	GLuint vaoBlue = createRenderableObject(&redObject, verticesB, sizeof(verticesB), indices, sizeof(indices), 6);
 
 	//Create Red Shader
-	GLuint vertexShader, fragmentShaderR;
+	GLuint vertexShaderR, fragmentShaderR;
 
-	vertexShader = createShader(GL_VERTEX_SHADER, 1, &vertexShaderSource);
+	vertexShaderR = createShader(GL_VERTEX_SHADER, 1, &vertexShaderSourceR);
 	fragmentShaderR = createShader(GL_FRAGMENT_SHADER, 1, &fragmentShaderSourceR);
 
 	GLuint shaderProgramR;
-	shaderProgramR = createShaderProgram(vertexShader, fragmentShaderR);
+	shaderProgramR = createShaderProgram(vertexShaderR, fragmentShaderR);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (GLvoid*) 0);
 	glEnableVertexAttribArray(0);
 
 	//Create Blue Shader
-	GLuint fragmentShaderB;
+	GLuint vertexShaderB, fragmentShaderB;
 
+	vertexShaderB = createShader(GL_VERTEX_SHADER, 1, &vertexShaderSourceB);
 	fragmentShaderB = createShader(GL_FRAGMENT_SHADER, 1, &fragmentShaderSourceB);
 
 	GLuint shaderProgramB;
-	shaderProgramB = createShaderProgram(vertexShader, fragmentShaderB);
+	shaderProgramB = createShaderProgram(vertexShaderB, fragmentShaderB);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (GLvoid*) 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (GLvoid*) 0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (GLvoid*) (3 * sizeof(float)));
 	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
 
-	glDeleteShader(vertexShader);
+	glDeleteShader(vertexShaderR);
+	glDeleteShader(vertexShaderB);
 	glDeleteShader(fragmentShaderR);
 	glDeleteShader(fragmentShaderB);
 
@@ -210,14 +236,18 @@ int main()
 
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	
-	while(!glfwWindowShouldClose(window)) {
-		processInput(window);
+	float r = 0.4f, g = 0.6f, b = 0.5f;
+	bool decrease = false;
 
-		glClearColor(0.0f, 1.0f, 0.0f, 0.3f);
+	while(!glfwWindowShouldClose(window)) {
+		
+		processInput(window);
+		glClearColor(r, g, b, 0.3f);
+		
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		renderLogic(shaderProgramR, shaderProgramB, vaoRed, vaoBlue);
-		
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
