@@ -5,17 +5,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-const char* vertexShaderSourceR = 
-"#version 330 core\nlayout (location = 0) in vec3 aPos;\n\nvoid main()\n{\ngl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n}";
-
-const char* vertexShaderSourceB = 
-"#version 330 core\nlayout (location = 0) in vec3 aPos;\nlayout (location = 1) in vec3 color;\nout vec3 vColor;\nvoid main()\n{\ngl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\nvColor = color;\n}";
-
-const char* fragmentShaderSourceR = 
-"#version 330 core\nout vec4 FragColor;\nuniform vec4 rgradient;\nvoid main()\n{\nFragColor = rgradient;\n}";
-
-const char* fragmentShaderSourceB = 
-"#version 330 core\nout vec4 FragColor;\nin vec3 vColor;\nvoid main()\n{\nFragColor = vec4(vColor, 1.0f);\n}";
+#include <shader.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -56,68 +46,6 @@ GLuint createRenderableObject(unsigned int* object, float* vertices, size_t v_si
 	}
 
 	return vao;
-}
-
-GLuint createShader(GLenum shaderType, GLsizei n, const GLchar** source)
-{
-	GLuint shader;
-	shader = glCreateShader(shaderType);
-
-	if(!shader) {
-		if(shaderType == GL_VERTEX_SHADER)
-			std::cout<<"Failed to create Vertex shader\n";
-		else
-			std::cout<<"Failed to created Fragment shader\n";
-		exit(EXIT_FAILURE);
-	}
-	glShaderSource(shader, n, source, NULL);
-	glCompileShader(shader);
-	
-	int success;
-	char log[512];
-
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-	if(!success) {
-		glGetShaderInfoLog(shader, 512, NULL, log);
-		if(shaderType == GL_VERTEX_SHADER)
-			std::cout<<"Failed to compile Vertex shader\n";
-		else
-			std::cout<<"Failed to compile Fragment shader\n";
-		
-		std::cout<<log<<std::endl;
-		exit(EXIT_FAILURE);
-	}
-	
-	return shader;
-}
-
-int createShaderProgram(GLuint vertexShader, GLuint fragmentShader)
-{
-	GLuint program;
-	program = glCreateProgram();
-	if(!program) {
-		std::cout<<"Failed to create shader program\n";
-		exit(EXIT_FAILURE);
-	}
-
-	glAttachShader(program, vertexShader);
-	glAttachShader(program, fragmentShader);
-
-	glLinkProgram(program);
-	
-	int success;
-	char log[512];
-
-	glGetProgramiv(program, GL_LINK_STATUS, &success);
-
-	if(!success) {
-		std::cout<<"Failed to link shader program\n";
-		glGetProgramInfoLog(program, 512, NULL, log);
-		std::cout<<log<<std::endl;
-		exit(EXIT_FAILURE);
-	}
-
-	return program;
 }
 
 void renderLogic(GLuint redProgram, GLuint blueProgram,
@@ -200,39 +128,19 @@ int main()
 	//Create Blue Object
 	unsigned int blueObject;
 	GLuint vaoBlue = createRenderableObject(&redObject, verticesB, sizeof(verticesB), indices, sizeof(indices), 6);
-
-	//Create Red Shader
-	GLuint vertexShaderR, fragmentShaderR;
-
-	vertexShaderR = createShader(GL_VERTEX_SHADER, 1, &vertexShaderSourceR);
-	fragmentShaderR = createShader(GL_FRAGMENT_SHADER, 1, &fragmentShaderSourceR);
-
-	GLuint shaderProgramR;
-	shaderProgramR = createShaderProgram(vertexShaderR, fragmentShaderR);
-
+	
+	//Red shader
+	Shader* redShader = new Shader("redshader.vert", "redshader.fr");
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (GLvoid*) 0);
 	glEnableVertexAttribArray(0);
 
-	//Create Blue Shader
-	GLuint vertexShaderB, fragmentShaderB;
-
-	vertexShaderB = createShader(GL_VERTEX_SHADER, 1, &vertexShaderSourceB);
-	fragmentShaderB = createShader(GL_FRAGMENT_SHADER, 1, &fragmentShaderSourceB);
-
-	GLuint shaderProgramB;
-	shaderProgramB = createShaderProgram(vertexShaderB, fragmentShaderB);
+	//Blue shader
+	Shader* blueShader = new Shader("blueshader.vert","blueshader.fr");
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (GLvoid*) 0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (GLvoid*) (3 * sizeof(float)));
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
-
-	glDeleteShader(vertexShaderR);
-	glDeleteShader(vertexShaderB);
-	glDeleteShader(fragmentShaderR);
-	glDeleteShader(fragmentShaderB);
-
-	glViewport(0, 0, 800, 600);
 
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	
@@ -246,7 +154,7 @@ int main()
 		
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		renderLogic(shaderProgramR, shaderProgramB, vaoRed, vaoBlue);
+		renderLogic(redShader->getShaderID(), blueShader->getShaderID(), vaoRed, vaoBlue);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

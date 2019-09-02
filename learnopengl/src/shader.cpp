@@ -27,6 +27,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
 	}
 	catch(std::ifstream::failure e) {
 		std::cout<<"Failed to load Shader source files\n";
+		exit(EXIT_FAILURE);
 	}
 
 	const char* vShaderCode = vertexCode.c_str();
@@ -130,4 +131,9 @@ void Shader::setInt(const std::string &name, int value) const
 void Shader::setFloat(const std::string &name, float value) const
 {
 	glUniform1f(glGetUniformLocation(shaderID, name.c_str()), value);
+}
+
+unsigned int Shader::getShaderID()
+{
+	return shaderID;
 }
