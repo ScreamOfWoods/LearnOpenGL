@@ -7,6 +7,7 @@
 struct imageProperties loadTextureImage(std::string texturePath)
 {
 	struct imageProperties imageProp;
+	stbi_set_flip_vertically_on_load(true);
 
 	imageProp.data = stbi_load(texturePath.c_str(), &(imageProp.width), &(imageProp.height), &(imageProp.nrChannels), 0);
 
@@ -28,8 +29,8 @@ unsigned int applyTexture(std::string texturePath, GLenum format)
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	struct imageProperties imageProp;
 	//Load texture image file

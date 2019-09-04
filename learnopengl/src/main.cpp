@@ -8,6 +8,8 @@
 #include <shader.h>
 #include <textures.h>
 
+float mixValue = 0.02f;
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
@@ -17,6 +19,18 @@ void processInput(GLFWwindow* window)
 {
 	if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, true);
+	}
+	if(glfwGetKey(window, GLFW_KEY_UP)) {
+		mixValue += 0.01f;
+		if(mixValue >= 1.0f) {
+			mixValue = 1.0f;
+		}
+	}
+	if(glfwGetKey(window, GLFW_KEY_DOWN)) {
+		mixValue -= 0.01f;
+		if(mixValue <= 0) {
+			mixValue = 0.0f;
+		}
 	}
 }
 
@@ -80,6 +94,7 @@ void renderLogic(Shader* redProgram, Shader* blueProgram,
 	//Set uniforms
 	blueProgram->setInt("textureData", 0);
 	blueProgram->setInt("textureData2", 1);
+	blueProgram->setFloat("mixValue", mixValue);
 	
 
 	glBindVertexArray(vaoBlue);
