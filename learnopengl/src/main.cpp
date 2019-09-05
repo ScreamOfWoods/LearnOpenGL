@@ -4,9 +4,11 @@
 #include <iostream>
 #include <stdlib.h>
 #include <math.h>
+#include <glm/glm.hpp>
 
 #include <shader.h>
 #include <textures.h>
+#include <transformations.h>
 
 float mixValue = 0.02f;
 
@@ -78,6 +80,17 @@ void renderLogic(Shader* redProgram, Shader* blueProgram,
 		std::cout<<"Unable to find UNIFORM variable from SHADER\n";
 		exit(EXIT_FAILURE);
 	}
+
+	glm::mat4 trans = glm::mat4(1.0f);
+	glm::vec3 position = glm::vec3(0.0f, -0.5f, 0.0f);
+	glm::vec3 rotationAxis = glm::vec3(0.0f, 0.0f, 1.0f);
+	glm::vec3 multiplier = glm::vec3(1.0, rpulse, 1.0f);
+	float degreeOfRotation = timeVal;
+
+	trans = translate(trans, position);
+	trans = scale(trans, multiplier);
+	trans = rotate(trans, rotationAxis, degreeOfRotation);
+	redProgram->setMatrix("transformMatrix", trans);
 
 	glUniform4f(rcolorLocation, rpulse, 0.0f, 0.0f, 1.0f);
 	glBindVertexArray(vaoRed);

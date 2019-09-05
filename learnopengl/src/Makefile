@@ -7,7 +7,7 @@ PKGFLAGS = glfw3
 CCFLAGS = $(include_dirs) $(debug_symbols)
 OBJ = *.o
 
-all: glad.c shader textures
+all: glad.c shader textures transformations
 	$(CC)  `pkg-config --cflags $(PKGFLAGS)` $(CCFLAGS) main.cpp glad.c $(OBJ) -o main `pkg-config --static --libs $(PKGFLAGS)` 
 
 shader: shader.cpp
@@ -15,3 +15,6 @@ shader: shader.cpp
 
 textures: textures.cpp
 	$(CC) $(CCFLAGS) -c textures.cpp -o textures.o
+
+transformations: transformations.cpp
+	$(CC) $(CCFLAGS) -c transformations.cpp -o transformations.o

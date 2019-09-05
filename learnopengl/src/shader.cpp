@@ -1,5 +1,9 @@
-#include <shader.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <stdlib.h>
+
+#include <shader.h>
 
 Shader::Shader(const char* vertexPath, const char* fragmentPath)
 {
@@ -131,6 +135,11 @@ void Shader::setInt(const std::string &name, int value) const
 void Shader::setFloat(const std::string &name, float value) const
 {
 	glUniform1f(glGetUniformLocation(shaderID, name.c_str()), value);
+}
+
+void Shader::setMatrix(const std::string &name, glm::mat4 transformationMatrix) const
+{
+	glUniformMatrix4fv(glGetUniformLocation(shaderID, name.c_str()), 1, GL_FALSE, glm::value_ptr(transformationMatrix));
 }
 
 unsigned int Shader::getShaderID()
