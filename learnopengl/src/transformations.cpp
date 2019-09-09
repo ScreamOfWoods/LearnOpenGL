@@ -29,14 +29,14 @@ glm::mat4 scale(glm::mat4 transformationMatrix, glm::vec3 multiplier)
 	return transformationMatrix;
 }
 
-void setClippingPlane(Shader* shader, float fieldOfView, glm::vec3 rotationVector, 
+void setClippingPlane(Shader* shader, float fieldOfView, glm::vec3 rotationVector, float angle,
 		glm::vec3 depthVector, float aspectRatio, float nearPlane, float farPlane)
 {
 	glm::mat4 modelMatrix = glm::mat4(1.0f);
 	glm::mat4 viewMatrix = glm::mat4(1.0f);
 	glm::mat4 projectionMatrix = glm::mat4(1.0f);
 
-	modelMatrix = rotate(modelMatrix, rotationVector, glm::radians(-55.0f));
+	modelMatrix = rotate(modelMatrix, rotationVector, angle);
 	viewMatrix = translate(viewMatrix, depthVector);
 	projectionMatrix = glm::perspective(glm::radians(fieldOfView), aspectRatio, nearPlane, farPlane);
 

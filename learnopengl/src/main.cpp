@@ -72,7 +72,6 @@ GLuint createRenderableObject(unsigned int* object, float* vertices, size_t v_si
 void renderLogic(Shader* redProgram, Shader* blueProgram,
 		 GLuint vaoRed, GLuint vaoBlue, GLuint texture1, GLuint texture2)
 {
-#if 0
 	redProgram->use();
 	
 	float timeVal = glfwGetTime();
@@ -84,13 +83,13 @@ void renderLogic(Shader* redProgram, Shader* blueProgram,
 		exit(EXIT_FAILURE);
 	}
 
-	setClippingPlane(redProgram, 45.0f, glm::vec3(1.0f, 0.0f, 0.0f), 
-			glm::vec3(0.0f, 0.0f, -3.0f), width / height, 0.01f, 100.0f);
+	setClippingPlane(redProgram, 45.0f, glm::vec3(1.0f, 0.0f, 0.0f), -55.0f,
+			glm::vec3(0.0f, 0.0f, -3.0f), (float) width / (float) height, 0.1f, 100.0f);
 
 	glUniform4f(rcolorLocation, rpulse, 0.0f, 0.0f, 1.0f);
 	glBindVertexArray(vaoRed);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-#endif
+	
 	//Bind textures
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture1);
@@ -104,8 +103,8 @@ void renderLogic(Shader* redProgram, Shader* blueProgram,
 	blueProgram->setInt("textureData2", 1);
 	blueProgram->setFloat("mixValue", mixValue);
 
-	setClippingPlane(blueProgram, 15.0f, glm::vec3(1.0f, 0.0f, 0.0f), 
-			glm::vec3(0.0f, 0.0f, -5.0f), width / height, 0.01f, 100.0f);
+	setClippingPlane(blueProgram, 45.0f, glm::vec3(1.0f, 0.0f, 0.0f), -55.0f, 
+			glm::vec3(0.0f, 0.0f, -5.0f), (float)width / (float)height, 0.1f, 100.0f);
 	
 
 	glBindVertexArray(vaoBlue);
