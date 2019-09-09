@@ -10,6 +10,8 @@
 #include <textures.h>
 #include <transformations.h>
 
+int width = 800;
+int height = 600;
 float mixValue = 0.02f;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -70,6 +72,7 @@ GLuint createRenderableObject(unsigned int* object, float* vertices, size_t v_si
 void renderLogic(Shader* redProgram, Shader* blueProgram,
 		 GLuint vaoRed, GLuint vaoBlue, GLuint texture1, GLuint texture2)
 {
+#if 0
 	redProgram->use();
 	
 	float timeVal = glfwGetTime();
@@ -81,21 +84,13 @@ void renderLogic(Shader* redProgram, Shader* blueProgram,
 		exit(EXIT_FAILURE);
 	}
 
-	glm::mat4 trans = glm::mat4(1.0f);
-	glm::vec3 position = glm::vec3(0.0f, -0.5f, 0.0f);
-	glm::vec3 rotationAxis = glm::vec3(0.0f, 0.0f, 1.0f);
-	glm::vec3 multiplier = glm::vec3(1.0, rpulse, 1.0f);
-	float degreeOfRotation = timeVal;
-
-	trans = translate(trans, position);
-	trans = scale(trans, multiplier);
-	trans = rotate(trans, rotationAxis, degreeOfRotation);
-	redProgram->setMatrix("transformMatrix", trans);
+	setClippingPlane(redProgram, 45.0f, glm::vec3(1.0f, 0.0f, 0.0f), 
+			glm::vec3(0.0f, 0.0f, -3.0f), width / height, 0.01f, 100.0f);
 
 	glUniform4f(rcolorLocation, rpulse, 0.0f, 0.0f, 1.0f);
 	glBindVertexArray(vaoRed);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
+#endif
 	//Bind textures
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture1);
@@ -108,6 +103,9 @@ void renderLogic(Shader* redProgram, Shader* blueProgram,
 	blueProgram->setInt("textureData", 0);
 	blueProgram->setInt("textureData2", 1);
 	blueProgram->setFloat("mixValue", mixValue);
+
+	setClippingPlane(blueProgram, 15.0f, glm::vec3(1.0f, 0.0f, 0.0f), 
+			glm::vec3(0.0f, 0.0f, -5.0f), width / height, 0.01f, 100.0f);
 	
 
 	glBindVertexArray(vaoBlue);
@@ -129,7 +127,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);	
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);	
 
-	GLFWwindow* window = glfwCreateWindow(800, 600, "Hello GL", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(width, height, "Hello GL", NULL, NULL);
 	if(window == NULL) {
 		std::cout<<"Failed to create GLFW window\n";
 		glfwTerminate();
