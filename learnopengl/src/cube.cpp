@@ -82,8 +82,10 @@ int main()
 	glBindVertexArray(cubeVao);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) 0);
 	glEnableVertexAttribArray(0);
+	std::cout << glGetError() << std::endl;
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) (3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
+	std::cout << glGetError() << std::endl;
 
 	//Add a fancy texture
 	unsigned int cubeTexture = applyTexture("../res/awesomeface.png", GL_RGBA);
@@ -102,10 +104,12 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, cubeTexture);
 		cubeShader->use();
 
-		setClippingPlane(cubeShader, 45.0f, glm::vec3(1.0f, 0.0f, 0.0f), -55.0f, glm::vec3(0.0f, 0.0f, -2.0f), (float) width / (float) height, 0.1f, 100.0f);
+		//setClippingPlane(cubeShader, 45.0f, glm::vec3(1.0f, 0.0f, 0.0f), -55.0f,
+		//	glm::vec3(0.0f, 0.0f, -3.0f), (float) width / (float) height, 0.1f, 100.0f);
+	//	setClippingPlane(cubeShader, 45.0f, glm::vec3(1.0f, 0.0f, 0.0f), -55.0f, glm::vec3(0.0f, 0.0f, -2.0f), (float) width / (float) height, 0.1f, 100.0f);
 
 		glBindVertexArray(cubeVao);
-		glDrawElements(GL_TRIANGLES, sizeof(cubeIndices), GL_UNSIGNED_INT, cubeIndices);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

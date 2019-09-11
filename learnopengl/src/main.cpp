@@ -156,19 +156,69 @@ int main()
 		-0.5f, 0.0f, 0.0f,  0.2f, 0.7f, 0.1f,  0.0f, 1.0f
 	};
 
+	float verticesCube[] = {
+		//Coordinates		//Textures
+		-1.0f, -1.0f, 0.0f,	1.0f, 1.0f,
+		-0.5f, -1.0f, 0.0f,	1.0f, 0.0f,
+		-0.5f, -1.0f, -0.5f,	0.0f, 0.0f,
+		-1.0f, -1.0f, -0.5f,	0.0f, 1.0f,
+		-1.0f, -0.5f, 0.0f,	1.0f, 1.0f,
+		-0.5f, -0.5f, 0.0f,	1.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,	0.0f, 0.0f,
+		-1.0f, -0.5f, -0.5f,	0.0f, 1.0f
+	};
+
+	unsigned int cubeIndices[] = {
+		//front face
+		0, 1, 4, 1, 5, 4,
+		//back face
+		2, 3, 7, 2, 6, 7,
+		//right face
+		1, 2, 5, 2, 6, 5,
+		//left face
+		0, 3, 4, 3, 4, 7,
+		//bottom face
+		0, 1, 3, 1, 2, 3,
+		//top face
+		4, 5, 7, 5, 6, 7
+	};
+
 	//Indices are the same for both objects
 	unsigned int indices[] = {
 		0, 1, 2,
 		0, 2, 3
 	};
 
+#if 1
+	//Create Cube	
+	unsigned int cubeDataBuffers[2];
+	unsigned int cubeVAO;
+
+	glGenBuffers(2, cubeDataBuffers);
+	glGenVertexArrays(1, &cubeVAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, cubeDataBuffers[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(verticesCube), verticesCube, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cubeDataBuffers[1]);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIndices), cubeIndices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) 0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) (3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	unsigned int textureCube = applyTexture("../res/container.jpg", GL_RGB);
+	Shader* cubeShader = new Shader("cube.vert", "cube.fr");
+#endif
 	//Create Red Object
 	unsigned int redObject;
 	GLuint vaoRed = createRenderableObject(&redObject, verticesR, sizeof(verticesR), indices, sizeof(indices), 3);
 	//Create Blue Object
 	unsigned int blueObject;
 	GLuint vaoBlue = createRenderableObject(&blueObject, verticesB, sizeof(verticesB), indices, sizeof(indices), 8);
-	
+
+
 	//Red shader
 	Shader* redShader = new Shader("redshader.vert", "redshader.fr");
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (GLvoid*) 0);
@@ -193,15 +243,26 @@ int main()
 	float r = 0.4f, g = 0.6f, b = 0.5f;
 	bool decrease = false;
 
+	glEnable(GL_DEPTH_TEST);
 	while(!glfwWindowShouldClose(window)) {
 		
 		processInput(window);
 		glClearColor(r, g, b, 0.3f);
 		
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		renderLogic(redShader, blueShader, vaoRed, vaoBlue, textureID1, textureID2);
+#if 0
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureCube);
+		cubeShader->use();
+		cubeShader->setInt("textureData", 0);
+		setClippingPlane(cubeShader, 45.0f, glm::vec3(1.0f, 0.0f, 0.0f), -55.0f, 
+			glm::vec3(0.0f, 0.0f, -5.0f), (float)width / (float)height, 0.1f, 100.0f);
 
+		glBindVertexArray(cubeVAO);
+		glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
+#endif
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
