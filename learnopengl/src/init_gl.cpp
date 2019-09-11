@@ -17,7 +17,7 @@ GLFWwindow* createWindow(int major, int minor, std::string hint, int width, int 
 	
 }
 
-void initWorkspace(int majorVersion, int minorVersion, std::string hint, int width,int height)
+GLFWwindow* initWorkspace(int majorVersion, int minorVersion, std::string hint, int width,int height)
 {
 	if(glfwInit() == GL_FALSE) {
 		std::cerr<<"Failed to init GLFW!\n";
@@ -39,4 +39,6 @@ void initWorkspace(int majorVersion, int minorVersion, std::string hint, int wid
 	}
 
 	glEnable(GL_DEPTH_TEST);
+
+	return window;
 }

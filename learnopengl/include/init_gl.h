@@ -3,6 +3,6 @@
 
 GLFWwindow* createWindow(int major, int minor, std::string hint, int width, int height);
 
-void initWorkspace(int majorVersion, int minorVersion, std::string hint, int width, int height);
+GLFWwindow* initWorkspace(int majorVersion, int minorVersion, std::string hint, int width, int height);
 
 #endif //INIT_GL_H
