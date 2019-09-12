@@ -7,10 +7,10 @@ PKGFLAGS = glfw3
 CCFLAGS = $(include_dirs) $(debug_symbols)
 OBJ = *.o
 
-all: glad.c shader textures transformations
+all: glad.c shader textures transformations vertex element
 	$(CC) `pkg-config --cflags $(PKGFLAGS)` $(CCFLAGS) main.cpp glad.c $(OBJ) -o main `pkg-config --static --libs $(PKGFLAGS)` 
 
-cube: shader textures transformations init_gl cube.cpp glad.c
+cube: shader textures transformations init_gl cube.cpp glad.c vertex element
 	$(CC) `pkg-config --cflags $(PKGFLAGS)` $(CCFLAGS) cube.cpp glad.c $(OBJ) -o cube `pkg-config --static --libs $(PKGFLAGS)`
 
 shader: shader.cpp
@@ -24,3 +24,9 @@ transformations: transformations.cpp
 
 init_gl: init_gl.cpp
 	$(CC) $(CCFLAGS) -c init_gl.cpp -o init_gl.o
+
+vertex: vertexBuffer.cpp
+	$(CC) $(CCFLAGS) -c vertexBuffer.cpp -o vertexBuffer.o
+
+element: elementBuffer.cpp
+	$(CC) $(CCFLAGS) -c elementBuffer.cpp -o elementBuffer.o

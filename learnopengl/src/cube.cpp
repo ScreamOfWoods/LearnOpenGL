@@ -11,6 +11,8 @@
 #include <transformations.h>
 #include <textures.h>
 #include <init_gl.h>
+#include <vertexBuffer.h>
+#include <elementBuffer.h>
 
 const int maj = 3;
 const int min = 3;
@@ -34,90 +36,103 @@ int main()
 	GLFWwindow* window = initWorkspace(maj, min, "Cube", width, height);
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
-	float cubeVertices[] = {
-		//front vertices
-		//coordinates		//textures
-		-0.5f, 0.5f, 0.5f,	0.0f, 1.0f,
-		0.5f, 0.5f, 0.5f,	1.0f, 1.0f,
-		0.5f, -0.5f, 0.5f,	1.0f, 0.0f,
-		-0.5f, -0.5f, 0.5f,	0.0f, 0.0f,
-		//back vertices
-		//coordinates		//textures
-		-0.5f, 0.5f, -0.5f,	0.0f, 1.0f,
-		0.5f, 0.5f, -0.5f,	1.0f, 1.0f,
-		0.5f, -0.5f, -0.5f,	1.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,	0.0f, 0.0f
+	float verticesR[] = {
+		 0.0f, 0.0f, 0.0f,
+		 0.5f, 0.0f, 0.0f,
+		 0.5f, -0.5f, 0.0f,
+		 0.0f, -0.5f, 0.0f
 	};
 
-	unsigned int cubeIndices[] = {
-		//Front
-		0, 3, 2, 0, 1, 2,
-		//Back
-		4, 7, 6, 4, 5, 6,
-		//Top
-		4, 0, 1, 4, 5, 1,
-		//Bottom
-		7, 3, 2, 7, 6, 2,
-		//Left
-		0, 4, 3, 4, 3, 7,
-		//Right
-		5, 1, 2, 5, 6, 2
+	unsigned int indices[] = {
+		0, 1, 2,
+		0, 2, 3
 	};
 
-	unsigned int cubeBuffers[2];
-	unsigned int cubeVao;
+	unsigned int va;
+	glGenVertexArrays(1, &va);
+	glBindVertexArray(va);
+	VertexBuffer vb(verticesR, sizeof(verticesR));
+	ElementBuffer eb(indices, sizeof(indices));
 
-	//Vertex Buffer Objects
-	//0 - Array buffer, 1 - Element buffer
-	glGenBuffers(2, cubeBuffers);
-	//Fit the vertices data
-	glBindBuffer(GL_ARRAY_BUFFER, cubeBuffers[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
-	//Fit the indices data
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cubeBuffers[1]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIndices), cubeIndices, GL_STATIC_DRAW);
-
-	//Generate Vertex Array Object
-	glGenVertexArrays(1, &cubeVao);
-	glBindVertexArray(cubeVao);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*) 0);
 	glEnableVertexAttribArray(0);
-	std::cout << glGetError() << std::endl;
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) (3 * sizeof(float)));
+
+	Shader* redShader = new Shader("redshader.vert", "redshader.fr");
+
+	float verticesCube[] = {
+		//Coordinates Front	//Colours
+		-0.5f, 0.5f, 0.5f,	1.0f, 0.0f, 0.0f,
+		0.5f, 0.5f, 0.5f,	0.0f, 1.0f, 0.0f,
+		0.5f, -0.5f, 0.5f,	0.0f, 0.0f, 1.0f,
+		-0.5f, -0.5f, 0.5f,	1.0f, 1.0f, 0.1f,
+		//Coordinates Back	//Colours
+		-0.5f, 0.5f, -0.5f,	1.0f, 0.0f, 0.0f,
+		0.5f, 0.5f, -0.5f,      0.0f, 1.0f, 0.0f,
+		0.5f, -0.5f, -0.5f,     0.0f, 0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,    1.0f, 1.0f, 0.1f
+	};
+
+	unsigned int indicesCube[] = {
+		//Front
+		0, 3, 2, 0, 2, 1,	
+		//Back
+		4, 7, 6, 4, 6, 5,
+		//Top
+		4, 0, 1, 4, 1, 5,
+		//Bottom
+		7, 3, 2, 7, 2, 6,
+		//Left
+		4, 0, 3, 4, 3, 7,
+		//Right
+		5, 1, 2, 5, 2, 6
+	};
+
+	unsigned int cubeVAO;
+	glGenVertexArrays(1, &cubeVAO);
+	glBindVertexArray(cubeVAO);
+
+	VertexBuffer cubeVBO(verticesCube, sizeof(verticesCube));
+	ElementBuffer cubeEBO(indicesCube, sizeof(indicesCube));
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) 0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) (3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
-	std::cout << glGetError() << std::endl;
 
-	//Add a fancy texture
-	unsigned int cubeTexture = applyTexture("../res/awesomeface.png", GL_RGBA);
+	Shader* cubeShader = new Shader("cube.vert", "cube.fr");
 
-	Shader* cubeShader = new Shader("cube.vert","cube.fr");
-	cubeShader->use();
-	cubeShader->setInt("textureData", 0);
-	
 	while(!glfwWindowShouldClose(window)) {
 		processInput(window);
 
 		glClearColor(0.2f, 0.3f, 0.2f, 0.1f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, cubeTexture);
+		redShader->use();
+		float timeVal = glfwGetTime();
+		float rpulse = sin(timeVal) / 2.0f + 0.5f;
+		int rcolorLocation = glGetUniformLocation(redShader->getShaderID(), "rgradient");
+		
+		if(rcolorLocation == -1) {
+			std::cout<<"Unable to find UNIFORM variable from SHADER\n";
+			exit(EXIT_FAILURE);
+		}
+		setClippingPlane(redShader, 45.0f, glm::vec3(1.0f, 0.0f, 0.0f), -55.0f,
+			glm::vec3(0.0f, 0.0f, -3.0f), (float) width / (float) height, 0.1f, 100.0f);
+
+		glUniform4f(rcolorLocation, rpulse, 0.0f, 0.0f, 1.0f);
+		glBindVertexArray(va);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
 		cubeShader->use();
+		setClippingPlane(cubeShader, 45.0f, glm::vec3(1.0f, 0.0f, 0.0f), -55.0f,
+			glm::vec3(0.0f, 0.0f, -3.0f), (float) width / (float) height, 0.1f, 100.0f);
 
-		//setClippingPlane(cubeShader, 45.0f, glm::vec3(1.0f, 0.0f, 0.0f), -55.0f,
-		//	glm::vec3(0.0f, 0.0f, -3.0f), (float) width / (float) height, 0.1f, 100.0f);
-	//	setClippingPlane(cubeShader, 45.0f, glm::vec3(1.0f, 0.0f, 0.0f), -55.0f, glm::vec3(0.0f, 0.0f, -2.0f), (float) width / (float) height, 0.1f, 100.0f);
-
-		glBindVertexArray(cubeVao);
+		glBindVertexArray(cubeVAO);
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-
-	free(cubeShader);
-	glDeleteBuffers(2, cubeBuffers);
-	glDeleteVertexArrays(1, &cubeVao);
 
 	glfwTerminate();
 
