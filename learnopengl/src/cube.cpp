@@ -124,8 +124,8 @@ int main()
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		cubeShader->use();
-		setClippingPlane(cubeShader, 45.0f, glm::vec3(1.0f, 0.0f, 0.0f), -55.0f,
-			glm::vec3(0.0f, 0.0f, -3.0f), (float) width / (float) height, 0.1f, 100.0f);
+		setClippingPlane(cubeShader, 35.0f, glm::vec3(1.0f, 0.0f, 0.0f), -55.0f,
+			glm::vec3(0.0f, 0.0f, -7.0f), (float) width / (float) height, 0.1f, 100.0f);
 
 		glBindVertexArray(cubeVAO);
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
