@@ -13,6 +13,8 @@
 #include <init_gl.h>
 #include <vertexBuffer.h>
 #include <elementBuffer.h>
+#include <vertexArray.h>
+#include <vertexLayout.h>
 
 const int maj = 3;
 const int min = 3;
@@ -48,14 +50,13 @@ int main()
 		0, 2, 3
 	};
 
-	unsigned int va;
-	glGenVertexArrays(1, &va);
-	glBindVertexArray(va);
+	VertexArray va;
+	VertexLayout layout;
 	VertexBuffer vb(verticesR, sizeof(verticesR));
+	layout.push(3);
+	va.addBuffer(vb, layout);
 	ElementBuffer eb(indices, sizeof(indices));
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*) 0);
-	glEnableVertexAttribArray(0);
 
 	Shader* redShader = new Shader("redshader.vert", "redshader.fr");
 
@@ -87,18 +88,14 @@ int main()
 		5, 1, 2, 5, 2, 6
 	};
 
-	unsigned int cubeVAO;
-	glGenVertexArrays(1, &cubeVAO);
-	glBindVertexArray(cubeVAO);
-
+	VertexArray cubeVAO;
+	VertexLayout cubeLayout;
+	cubeLayout.push(3);
+	cubeLayout.push(3);
 	VertexBuffer cubeVBO(verticesCube, sizeof(verticesCube));
+	cubeVAO.addBuffer(cubeVBO, cubeLayout);
 	ElementBuffer cubeEBO(indicesCube, sizeof(indicesCube));
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) 0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) (3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
+	
 	Shader* cubeShader = new Shader("cube.vert", "cube.fr");
 
 	while(!glfwWindowShouldClose(window)) {
@@ -107,6 +104,7 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.2f, 0.1f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		va.bind();
 		redShader->use();
 		float timeVal = glfwGetTime();
 		float rpulse = sin(timeVal) / 2.0f + 0.5f;
@@ -120,16 +118,14 @@ int main()
 			glm::vec3(0.0f, 0.0f, -3.0f), (float) width / (float) height, 0.1f, 100.0f);
 
 		glUniform4f(rcolorLocation, rpulse, 0.0f, 0.0f, 1.0f);
-		glBindVertexArray(va);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		cubeShader->use();
 		setClippingPlane(cubeShader, 35.0f, glm::vec3(1.0f, 0.0f, 0.0f), -55.0f,
 			glm::vec3(0.0f, 0.0f, -7.0f), (float) width / (float) height, 0.1f, 100.0f);
 
-		glBindVertexArray(cubeVAO);
+		cubeVAO.bind();
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}

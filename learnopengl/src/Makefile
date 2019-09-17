@@ -1,4 +1,4 @@
-CC = g++
+CC = g++ -std=c++11
 
 include_dirs = -I../ -I../GLAD/include -I../include/
 debug_symbols = -ggdb
@@ -10,7 +10,7 @@ OBJ = *.o
 all: glad.c shader textures transformations vertex element
 	$(CC) `pkg-config --cflags $(PKGFLAGS)` $(CCFLAGS) main.cpp glad.c $(OBJ) -o main `pkg-config --static --libs $(PKGFLAGS)` 
 
-cube: shader textures transformations init_gl cube.cpp glad.c vertex element
+cube: shader textures transformations init_gl cube.cpp glad.c vertex element arrayObject
 	$(CC) `pkg-config --cflags $(PKGFLAGS)` $(CCFLAGS) cube.cpp glad.c $(OBJ) -o cube `pkg-config --static --libs $(PKGFLAGS)`
 
 shader: shader.cpp
@@ -30,3 +30,7 @@ vertex: vertexBuffer.cpp
 
 element: elementBuffer.cpp
 	$(CC) $(CCFLAGS) -c elementBuffer.cpp -o elementBuffer.o
+
+arrayObject: vertexArray.cpp
+	$(CC) $(CCFLAGS) -c vertexArray.cpp -o vertexArray.o
+	
