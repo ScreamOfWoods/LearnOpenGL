@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <stdlib.h>
+#include <math.h>
 
 #include <shader.h>
 #include <transformations.h>
@@ -111,6 +112,8 @@ int main()
 	ElementBuffer cubeEBO(indicesCube, sizeof(indicesCube));
 	
 	Shader* cubeShader = new Shader("cube.vert", "cube.fr");
+	glm::mat4 projection = glm::mat4(1.0f);
+	projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
 
 	while(!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -118,6 +121,7 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.2f, 0.1f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+#if 0
 		va.bind();
 		redShader->use();
 		float timeVal = glfwGetTime();
@@ -134,15 +138,37 @@ int main()
 		glUniform4f(rcolorLocation, rpulse, 0.0f, 0.0f, 1.0f);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		
-		cubeShader->use();
 		
 		glm::mat4 view = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
 		glm::mat4 projection = glm::mat4(1.0f);
-		projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
 		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 		cubeShader->setMatrix("projection", projection);
 		cubeShader->setMatrix("view", view);
 		
+		//Camera setup
+		//Z axis
+		glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+		glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+		glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);
+		//X axis
+		glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+		glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
+		//Y axis
+		glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
+#endif
+		cubeShader->use();
+
+		float radius = 10.0f;
+		float camX = sin(glfwGetTime()) * radius;
+		float camZ = cos(glfwGetTime()) * radius;
+		glm::mat4 cameraView = glm::mat4(1.0f);
+		cameraView = glm::lookAt(
+				glm::vec3(camX, 0.0f, camZ),
+				glm::vec3(0.0f, 0.0f, 0.0f),
+				glm::vec3(0.0f, 1.0f, 0.0f)
+			);
+		cubeShader->setMatrix("view", cameraView);
+		cubeShader->setMatrix("projection", projection);
 		cubeVAO.bind();
 		for(int i = 0; i < 10; i++) {
 			glm::mat4 model = glm::mat4(1.0f);
@@ -155,6 +181,7 @@ int main()
 		}
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+
 	}
 
 	glfwTerminate();
